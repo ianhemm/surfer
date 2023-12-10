@@ -22,48 +22,8 @@ fn main() -> glib::ExitCode {
             .homogeneous(false)
             .build();
 
-
-
-
-        // the URL and search bar
-        let toolbox = gtk::Box::builder()
-            .orientation(gtk::Orientation::Horizontal)
-            .homogeneous(false)
-            .build();
-        let back_button = gtk::Button::builder()
-            .icon_name("back")
-            .build();
-        let forward_button = gtk::Button::builder()
-            .icon_name("forward")
-            .build();
-        let home_button = gtk::Button::builder()
-            .icon_name("home")
-            .build();
-
-        let url_text_input = gtk::Entry::builder().build();
-        let search_text_input = gtk::Entry::builder().build();
-
-        toolbox.append(&back_button);
-        toolbox.append(&forward_button);
-        toolbox.append(&home_button);
-
-        toolbox.append(&url_text_input);
-
-        let headerbar = gtk::HeaderBar::builder()
-            .show_title_buttons(false)
-            .build();
-        headerbar.pack_start(&toolbox);
-        headerbar.pack_end(&search_text_input);
-
-        let webview = webkit::WebView::new();
-        webview.load_uri(&url_request);
-        let window = gtk::ScrolledWindow::builder()
-            .vexpand(true)
-            .child(&webview)
-            .build();
-
-        vbox.append(&headerbar);
-        vbox.append(&window);
+        let headerbar = build_url_header();
+        let webview_window = build_webview_window(url_request);
 
         let window = gtk::Window::builder()
             .application(app)
@@ -73,8 +33,93 @@ fn main() -> glib::ExitCode {
             .child(&vbox)
             .build();
 
+
+        vbox.append(&headerbar);
+        vbox.append(&webview_window);
+
         window.present();
     });
 
     app.run()
+}
+
+fn build_url_header() -> gtk::HeaderBar {
+    // button and url box
+    let toolbox = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .homogeneous(false)
+        .build();
+    let back_button = gtk::Button::builder()
+        .icon_name("back")
+        .build();
+    back_button.connect_clicked(|_| {
+        dbg!("back button clicked!");
+        todo!();
+    });
+
+    let forward_button = gtk::Button::builder()
+        .icon_name("forward")
+        .build();
+    forward_button.connect_clicked(|_| {
+        dbg!("forward button clicked!");
+        todo!();
+    });
+
+    let home_button = gtk::Button::builder()
+        .icon_name("home")
+        .build();
+    home_button.connect_clicked(|_| {
+        dbg!("home button clicked!");
+        todo!();
+    });
+
+    let url_text_input = gtk::Entry::builder().build();
+    let url_go_button = gtk::Button::builder()
+        .icon_name("home")
+        .build();
+    url_go_button.connect_clicked(|_| {
+        dbg!("url go button clicked!");
+        todo!();
+    });
+
+    toolbox.append(&back_button);
+    toolbox.append(&forward_button);
+    toolbox.append(&home_button);
+
+    toolbox.append(&url_text_input);
+    toolbox.append(&url_go_button);
+
+    // the search bar box
+    let search_box = gtk::Box::builder().build();
+    let search_text_input = gtk::Entry::builder().build();
+    let search_go_button = gtk::Button::builder()
+        .icon_name("arrow_left")
+        .build();
+    search_go_button.connect_clicked(|_| {
+        dbg!("search go button clicked!");
+        todo!();
+    });
+
+    search_box.append(&search_text_input);
+    search_box.append(&search_go_button);
+
+    // headerbar setup
+    let headerbar = gtk::HeaderBar::builder()
+        .show_title_buttons(false)
+        .build();
+    headerbar.pack_start(&toolbox);
+    headerbar.pack_end(&search_box);
+
+    headerbar
+}
+
+fn build_webview_window(url_request: &str) -> gtk::ScrolledWindow {
+    let webview = webkit::WebView::new();
+    webview.load_uri(&url_request);
+    let window = gtk::ScrolledWindow::builder()
+        .vexpand(true)
+        .child(&webview)
+        .build();
+
+    window
 }
