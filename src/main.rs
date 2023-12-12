@@ -1,19 +1,31 @@
 use gtk::prelude::*;
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
+use gtk::glib::clone;
 
 use webkit6 as webkit;
 use webkit::prelude::*;
 
 const APP_ID: &str = "xyz.ianhemm.surfer";
 
+#[derive(Debug)]
 struct AppModel {
     url: String,
+    url_textinput: String,
+}
+
+#[derive(Debug)]
+enum Message {
+    UrlRequest,
+    UrlChange(String),
+    Forward,
+    Backward,
+    Home,
 }
 
 
 #[relm4::component]
 impl SimpleComponent for AppModel {
-    type Input = ();
+    type Input = Message;
     type Output = ();
     type Init = String;
     type Widgets = AppWidgets;
@@ -27,6 +39,8 @@ impl SimpleComponent for AppModel {
                 set_orientation: gtk::Orientation::Vertical,
                 set_homogeneous: false,
                 gtk::Box {
+                    set_spacing: 5,
+                    set_margin_all: 2,
                     set_orientation: gtk::Orientation::Horizontal,
 
                     gtk::Button {
@@ -41,8 +55,9 @@ impl SimpleComponent for AppModel {
 
                     },
 
+                    #[name="url_entry"]
                     gtk::Entry {
-
+                        connect_activate => Message::UrlRequest,
                     },
 
                     gtk::Button {
@@ -62,8 +77,10 @@ impl SimpleComponent for AppModel {
                 gtk::ScrolledWindow {
                     set_vexpand: true,
 
+                    #[name="web_view"]
                     webkit::WebView {
-                        load_uri: "https://example.com/",
+                        #[watch]
+                        load_uri: &format!("{}", model.url),
                     },
                 },
 
@@ -77,20 +94,34 @@ impl SimpleComponent for AppModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = AppModel { url };
+        let model = AppModel { url: url.clone(), url_textinput: url };
+
 
         let widgets = view_output!();
+        widgets.url_entry.connect_changed(clone!(@strong sender => move |entry| {
+            sender.input(Message::UrlChange(String::from(entry.text().as_str())));
+        }));
 
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>){
-
+    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>){
+        match msg {
+            Message::UrlRequest => {
+                self.url = self.url_textinput.clone();
+            },
+            Message::UrlChange(url) => {
+                self.url_textinput = url;
+            }
+            Message::Forward => { todo!(); }
+            Message::Backward => { todo!(); }
+            Message::Home => { todo!(); }
+        }
     }
 }
 
 
 fn main() {
     let app = RelmApp::new(APP_ID);
-    app.run::<AppModel>(String::from(""));
+    app.run::<AppModel>(String::from("https://example.com"));
 }
