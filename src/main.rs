@@ -1,3 +1,6 @@
+use std::collections::VecDeque;
+use std::mem;
+
 use gtk::prelude::*;
 use relm4::{gtk, ComponentParts, ComponentSender, RelmApp, RelmWidgetExt, SimpleComponent};
 use gtk::glib::clone;
@@ -11,6 +14,8 @@ const APP_ID: &str = "xyz.ianhemm.surfer";
 struct AppModel {
     url: String,
     url_textinput: String,
+    history: VecDeque<String>,
+    future: VecDeque<String>,
 }
 
 #[derive(Debug)]
@@ -44,11 +49,11 @@ impl SimpleComponent for AppModel {
                     set_orientation: gtk::Orientation::Horizontal,
 
                     gtk::Button {
-
+                        connect_clicked => Message::Backward,
                     },
 
                     gtk::Button {
-
+                        connect_clicked => Message::Forward,
                     },
 
                     gtk::Button {
@@ -94,7 +99,12 @@ impl SimpleComponent for AppModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = AppModel { url: url.clone(), url_textinput: url };
+        let model = AppModel {
+            url: url.clone(),
+            url_textinput: url,
+            future: VecDeque::new(),
+            history: VecDeque::new(),
+        };
 
 
         let widgets = view_output!();
@@ -108,14 +118,26 @@ impl SimpleComponent for AppModel {
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>){
         match msg {
             Message::UrlRequest => {
+                self.history.push_back(self.url.clone());
                 self.url = self.url_textinput.clone();
+                self.future.clear();
             },
             Message::UrlChange(url) => {
                 self.url_textinput = url;
-            }
-            Message::Forward => { todo!(); }
-            Message::Backward => { todo!(); }
-            Message::Home => { todo!(); }
+            },
+            Message::Forward => {
+                if let Some(mut future_url) = self.future.pop_back() {
+                    mem::swap(&mut future_url, &mut self.url);
+                    self.history.push_back(future_url);
+                }
+            },
+            Message::Backward => {
+                if let Some(mut history_url) = self.history.pop_back() {
+                    mem::swap(&mut history_url, &mut self.url);
+                    self.future.push_back(history_url);
+                }
+            },
+            Message::Home => { todo!(); },
         }
     }
 }
