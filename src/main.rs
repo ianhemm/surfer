@@ -16,6 +16,7 @@ struct AppModel {
     url_textinput: String,
     history: VecDeque<String>,
     future: VecDeque<String>,
+    home: String,
 }
 
 #[derive(Debug)]
@@ -82,6 +83,8 @@ impl SimpleComponent for AppModel {
                 gtk::ScrolledWindow {
                     set_vexpand: true,
 
+                    // TODO: connect redirects and loading from web browser
+                    // to URL bar and history
                     #[name="web_view"]
                     webkit::WebView {
                         #[watch]
@@ -101,6 +104,7 @@ impl SimpleComponent for AppModel {
     ) -> ComponentParts<Self> {
         let model = AppModel {
             url: url.clone(),
+            home: url.clone(), // TODO, allow the user to set a default home
             url_textinput: url,
             future: VecDeque::new(),
             history: VecDeque::new(),
@@ -139,8 +143,12 @@ impl SimpleComponent for AppModel {
                     self.future.push_back(history_url);
                 }
             },
-            Message::Home => { todo!(); },
-        }
+            Message::Home => {
+                self.history.push_back(self.url.clone());
+                self.url = self.home.clone();
+                self.future.clear();
+            },
+        };
     }
 }
 
