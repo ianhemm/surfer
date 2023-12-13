@@ -118,9 +118,11 @@ impl SimpleComponent for AppModel {
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>){
         match msg {
             Message::UrlRequest => {
-                self.history.push_back(self.url.clone());
-                self.url = self.url_textinput.clone();
-                self.future.clear();
+                if(!self.url_textinput.is_empty()){
+                    self.history.push_back(self.url.clone());
+                    self.url = self.url_textinput.clone();
+                    self.future.clear();
+                }
             },
             Message::UrlChange(url) => {
                 self.url_textinput = url;
